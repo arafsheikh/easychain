@@ -35,6 +35,10 @@ class Message:
         if self.hash != self.__get_message_hash():
             raise InvalidMessage("Invalid message hash in message: " + str(self))
 
+    def get(self):
+        self.validate()
+        return self.data
+
     def __repr__(self):
         return 'Message<hash: {}, prev_hash: {}, sender: {}, receiver: {}, data: {}>'.format(
             self.hash, self.prev_hash, self.sender, self.receiver, self.data[:25]
@@ -67,14 +71,14 @@ class Block:
     # The block hash only needs to incorporate the head message hash, which then transitively includes all prior hashes.
     def link(self, block):
         self.prev_hash = block.hash
-        
+
     def seal(self):
         self.timestamp = time.time()
         self.hash = self.__get_block_hash()
 
     # Validates each message hash, then chain integrity, then the block hash.
     # Calls each message's validate() method.
-    # If a message fails validation, this method captures the exception and 
+    # If a message fails validation, this method captures the exception and
     # throws InvalidBlock since an invalid message invalidates the whole block.
     def validate(self):
         for i, msg in enumerate(self.messages):
@@ -87,6 +91,10 @@ class Block:
                     i, str(ex), str(self))
                 )
 
+    def get_messages(self):
+        self.validate()
+        return self.messages
+
     def __repr__(self):
         return 'Block<hash: {}, prev_hash: {}, messages: {}, time: {}>'.format(
             self.hash, self.prev_hash, len(self.messages), self.timestamp
@@ -95,7 +103,7 @@ class Block:
 
 
 class Blockchain:
-    
+
     def __init__(self):
         self.blocks = []
 
@@ -114,6 +122,10 @@ class Blockchain:
                 block.validate()
             except InvalidBlock as ex:
                 raise InvalidBlockchain("Invalid blockchain at block {} caused by: {}".format(i, str(ex)))
+
+    def get_blocks(self):
+        self.validate()
+        return self.blocks
 
     def __repr__(self):
         return 'Blockchain<blocks: {}>'.format(len(self.blocks))
